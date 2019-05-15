@@ -198,6 +198,11 @@ void initClocks(){
   for(int j = 0; j < clockX.length; j++){
         clockX[j] = SOIL_SIZE * floor(random(SOIL_COL_COUNT));
         clockY[j] = SOIL_SIZE * ( j * 4 + floor(random(4)));
+  for(int k = 0; k < cabbageX.length; k++){
+  if(cabbageX[k]==clockX[k]&&cabbageY[k]==clockY[k]){
+      j-=1;
+      }
+    }
   }
 }
 
@@ -422,8 +427,7 @@ void draw() {
 			if(soldierX[i] >= width) soldierX[i] = -SOIL_SIZE;
 
 			image(soldier, soldierX[i], soldierY[i]);
-      
-      drawCaution();
+
 
 			// Requirement #3: Use boolean isHit(...) to detect collision
 			if(gameTimer>0 && isHit(soldierX[i], soldierY[i], SOIL_SIZE,SOIL_SIZE,playerX, playerY,SOIL_SIZE, SOIL_SIZE)==true){
@@ -443,6 +447,7 @@ void draw() {
 
 		// Requirement #6:
 		//   Call drawCaution() to draw caution sign
+    drawCaution();
 
 		popMatrix();
 
@@ -521,16 +526,14 @@ void drawDepthUI(){
 }
 
 void drawTimerUI(){
-	String timeString = nf((gameTimer/60)%60,2); // Requirement #4: Get the mm:ss string using String convertFramesToTimeString(int frames)
-  String timeStringMm = nf(floor(gameTimer/3600)%60,2);// Requirement #4
-	textAlign(LEFT, BOTTOM);
+textAlign(LEFT, BOTTOM);
 
 	// Time Text Shadow Effect - You don't have to change this!
 	fill(0, 120);
-	text(timeStringMm+":"+timeString,3, height + 3);
+	text(convertFramesToTimeString(gameTimer),3, height + 3);
   color timeTextColor = getTimeTextColor(gameTimer) ;
     fill(timeTextColor);
-    text(timeStringMm+":"+timeString,0, height);
+    text(convertFramesToTimeString(gameTimer),0, height);
 }
 
 void addTime(float seconds){		// Requirement #2
@@ -548,6 +551,14 @@ boolean isHit(float ax, float ay, float aw, float ah, float bx, float by, float 
 }
 }
 
+String convertFramesToTimeString(int frames){
+int mm=floor(frames/3600);
+int ss=frames/60%60;
+String timeString = nf(ss,2); // Requirement #4: Get the mm:ss string using String convertFramesToTimeString(int frames)
+String timeStringMm = nf(mm,2);
+return timeStringMm+":"+timeString;
+}
+
 color getTimeTextColor(int gameTimer){				// Requirement #5
     if(gameTimer>7200){
     return #00ffff;
@@ -562,16 +573,30 @@ color getTimeTextColor(int gameTimer){				// Requirement #5
     }
 }
 
-int getEnemyIndexByRow(int row){				// Requirement #6
 
-	return -1;
+
+int getEnemyIndexByRow(int row){				// Requirement #6
+   if((row+5)*80==soldierY[0]){
+   return 0;
+   }else if((row+5)*80==soldierY[1]){
+   return 1;
+   }else if((row+5)*80==soldierY[2]){
+   return 2;
+   }else if((row+5)*80==soldierY[3]){
+   return 3;
+   }else if((row+5)*80==soldierY[4]){
+   return 4;
+   }else if((row+5)*80==soldierY[5]){
+   return 5;
+   }else{
+	 return -1;
+  }
 }
 
 void drawCaution(){					// Requirement #6
-  for(int i = 0; i < soldierX.length; i++){
-  image(caution, soldierX[i], soldierY[i]-80);
+  if(getEnemyIndexByRow(playerRow)!=-1)
+  image(caution, soldierX[getEnemyIndexByRow(playerRow)], soldierY[getEnemyIndexByRow(playerRow)]-80);
   }
-}
 
 void keyPressed(){
 	if(key==CODED){
