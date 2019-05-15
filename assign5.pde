@@ -106,7 +106,7 @@ void initGame(){
 	initCabbages();
 
 	// Requirement #2: Initialize clocks and their position
-
+  initClocks();
 }
 
 void initPlayer(){
@@ -193,6 +193,12 @@ void initCabbages(){
 void initClocks(){
 	// Requirement #1: Complete this method based on initCabbages()
 	// - Remember to reroll if the randomized position has a cabbage on the same soil!
+  clockX = new float[6];
+  clockY = new float[6];
+  for(int j = 0; j < clockX.length; j++){
+        clockX[j] = SOIL_SIZE * floor(random(SOIL_COL_COUNT));
+        clockY[j] = SOIL_SIZE * ( j * 4 + floor(random(4)));
+  }
 }
 
 void draw() {
@@ -282,25 +288,23 @@ void draw() {
 		// Cabbages
 
 		for(int i = 0; i < cabbageX.length; i++){
-
-			image(cabbage, cabbageX[i], cabbageY[i]);
+    image(cabbage, cabbageX[i], cabbageY[i]);
 
 			// Requirement #3: Use boolean isHit(...) to detect collision
-			if(playerHealth < PLAYER_MAX_HEALTH
-			&& cabbageX[i] + SOIL_SIZE > playerX    // r1 right edge past r2 left
-		    && cabbageX[i] < playerX + SOIL_SIZE    // r1 left edge past r2 right
-		    && cabbageY[i] + SOIL_SIZE > playerY    // r1 top edge past r2 bottom
-		    && cabbageY[i] < playerY + SOIL_SIZE) { // r1 bottom edge past r2 top
-
+			if(playerHealth < PLAYER_MAX_HEALTH&&gameTimer>0 && isHit(cabbageX[i], cabbageY[i], SOIL_SIZE,SOIL_SIZE,playerX, playerY,SOIL_SIZE, SOIL_SIZE)==true){
 				playerHealth ++;
 				cabbageX[i] = cabbageY[i] = -1000;
-
 			}
-
 		}
 
 		// Requirement #1: Clocks
-		// --- Requirement #3: Use boolean isHit(...) to detect clock <-> player collision
+    for(int j = 0; j <clockX.length; j++){
+    image(clock, clockX[j], clockY[j]);
+      if(gameTimer>0 && isHit(clockX[j], clockY[j], SOIL_SIZE,SOIL_SIZE,playerX, playerY,SOIL_SIZE, SOIL_SIZE)==true){
+      clockX[j] = clockY[j] = -1000;//clock disappear
+      addTime(CLOCK_BONUS_SECONDS);
+      }
+    }
 
 		// Groundhog
 
@@ -412,38 +416,29 @@ void draw() {
 		}
 
 		// Soldiers
-
 		for(int i = 0; i < soldierX.length; i++){
 
 			soldierX[i] += soldierSpeed;
 			if(soldierX[i] >= width) soldierX[i] = -SOIL_SIZE;
 
 			image(soldier, soldierX[i], soldierY[i]);
+      
+      drawCaution();
 
 			// Requirement #3: Use boolean isHit(...) to detect collision
-			if(soldierX[i] + SOIL_SIZE > playerX    // r1 right edge past r2 left
-		    && soldierX[i] < playerX + SOIL_SIZE    // r1 left edge past r2 right
-		    && soldierY[i] + SOIL_SIZE > playerY    // r1 top edge past r2 bottom
-		    && soldierY[i] < playerY + SOIL_SIZE) { // r1 bottom edge past r2 top
-
-				playerHealth --;
-
-				if(playerHealth == 0){
-
-					gameState = GAME_OVER;
-
-				}else{
-
-					playerX = PLAYER_INIT_X;
-					playerY = PLAYER_INIT_Y;
-					playerCol = (int) playerX / SOIL_SIZE;
-					playerRow = (int) playerY / SOIL_SIZE;
-					soilHealth[playerCol][playerRow + 1] = 15;
-					playerMoveTimer = 0;
-
-				}
-
-			}
+			if(gameTimer>0 && isHit(soldierX[i], soldierY[i], SOIL_SIZE,SOIL_SIZE,playerX, playerY,SOIL_SIZE, SOIL_SIZE)==true){
+      playerHealth --;
+      if(playerHealth == 0){
+      gameState = GAME_OVER;
+            }else{
+                playerX = PLAYER_INIT_X;
+                playerY = PLAYER_INIT_Y;
+                playerCol = (int) playerX / SOIL_SIZE;
+                playerRow = (int) playerY / SOIL_SIZE;
+                soilHealth[playerCol][playerRow + 1] = 15;
+                playerMoveTimer = 0;
+              }
+      }
 		}
 
 		// Requirement #6:
@@ -526,53 +521,58 @@ void drawDepthUI(){
 }
 
 void drawTimerUI(){
-	String timeString = str(gameTimer); // Requirement #4: Get the mm:ss string using String convertFramesToTimeString(int frames)
-
+	String timeString = nf((gameTimer/60)%60,2); // Requirement #4: Get the mm:ss string using String convertFramesToTimeString(int frames)
+  String timeStringMm = nf(floor(gameTimer/3600)%60,2);// Requirement #4
 	textAlign(LEFT, BOTTOM);
 
 	// Time Text Shadow Effect - You don't have to change this!
 	fill(0, 120);
-	text(timeString, 3, height + 3);
-
-	// Actual Time Text
-	color timeTextColor = #ffffff; 		// Requirement #5: Get the correct color using color getTimeTextColor(int frames)
-	fill(timeTextColor);
-	text(timeString, 0, height);
+	text(timeStringMm+':'+timeString,3, height + 3);
+  color timeTextColor = getTimeTextColor(gameTimer) ;
+    fill(timeTextColor);
+    text(timeString,85, height);
+    text(timeStringMm,0, height);
+    text(':',66, height);
 }
 
-void addTime(float seconds){					// Requirement #2
+void addTime(float seconds){		// Requirement #2
+gameTimer += seconds * 60;//+15s
 }
 
 boolean isHit(float ax, float ay, float aw, float ah, float bx, float by, float bw, float bh){
-	return false;								// Requirement #3
+	if(ax + aw > bx &&    // a right edge past b left
+          ax < bx + bw &&    // a left edge past b right
+          ay + ah > by &&    // a top edge past b bottom
+          ay < by + bh){
+  return true;								// Requirement #3
+}else{
+  return false;
+}
 }
 
-String convertFramesToTimeString(int frames){	// Requirement #4
-	return "";
-}
-
-color getTimeTextColor(int frames){				// Requirement #5
-	return #ffffff;
+color getTimeTextColor(int gameTimer){				// Requirement #5
+    if(gameTimer>7200){
+    return #00ffff;
+    }else if(gameTimer<7200&&gameTimer>=3600){
+    return #ffffff;
+    }else if(gameTimer<3600&&gameTimer>=1800){
+    return #ffcc00;
+    }else if(gameTimer<1800&&gameTimer>=600){
+    return #ff6600;
+    }else{
+    return #ff0000;
+    }
 }
 
 int getEnemyIndexByRow(int row){				// Requirement #6
 
-		// HINT:
-		// - If there's a soldier in that row, return that soldier's index in soldierX/soldierY
-		// (for example, if soldierY[3] is in that row, return 3)
-		// - Return -1 if there's no soldier in that row
-
 	return -1;
 }
 
-void drawCaution(){								// Requirement #6
-
-	// Draw a caution sign above the enemy under the screen using int getEnemyIndexByRow(int row)
-
-		// HINT:
-		// - Use playerRow to calculate the row below the screen
-		// - Use the returned value from int getEnemyIndexByRow(int row) to get the soldier's position from soldierX/soldierY arrays
-		// - Don't draw anything if int getEnemyIndexByRow(int row) returns -1
+void drawCaution(){					// Requirement #6
+  for(int i = 0; i < soldierX.length; i++){
+  image(caution, soldierX[i], soldierY[i]-80);
+  }
 }
 
 void keyPressed(){
