@@ -530,9 +530,7 @@ void drawTimerUI(){
 	text(timeStringMm+':'+timeString,3, height + 3);
   color timeTextColor = getTimeTextColor(gameTimer) ;
     fill(timeTextColor);
-    text(timeString,85, height);
-    text(timeStringMm,0, height);
-    text(':',66, height);
+    text(timeStringMm+':'+timeString,0, height);
 }
 
 void addTime(float seconds){		// Requirement #2
