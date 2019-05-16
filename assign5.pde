@@ -553,7 +553,7 @@ boolean isHit(float ax, float ay, float aw, float ah, float bx, float by, float 
 
 String convertFramesToTimeString(int frames){
 int mm=floor(frames/3600);
-int ss=frames/60%60;
+int ss=floor(frames/60%60);
 String timeString = nf(ss,2); // Requirement #4: Get the mm:ss string using String convertFramesToTimeString(int frames)
 String timeStringMm = nf(mm,2);
 return timeStringMm+":"+timeString;
